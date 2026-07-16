@@ -252,7 +252,7 @@ test('keys: valid client key authenticates and is attributed', async () => {
   // Attribution is visible to root via /stats.
   const stats = await get('/stats', MASTER)
   expect(stats.status).toBe(200)
-  expect(stats.body.byClient.some((c: any) => c.key === k.keyId)).toBe(true)
+  expect(stats.body.sandbox.byClient.some((c: any) => c.key === k.keyId)).toBe(true)
 })
 
 test('keys: missing / bogus key → 401', async () => {
@@ -271,15 +271,20 @@ test('keys: a revoked key → 401', async () => {
   expect(after.status).toBe(401)
 })
 
-test('/stats: root key → 200 with the right shape', async () => {
+test('/stats: root key → 200 with production + sandbox slices', async () => {
   const { status, body } = await get('/stats', MASTER)
   expect(status).toBe(200)
-  expect(typeof body.total).toBe('number')
-  expect(body.allow + body.deny).toBe(body.total)
-  expect(Array.isArray(body.byReason)).toBe(true)
-  expect(Array.isArray(body.recent)).toBe(true)
-  // PAYLOAD_MISMATCH (caught swaps) is tracked and non-zero from earlier tests.
-  expect(body.byReason.some((r: any) => r.key === 'PAYLOAD_MISMATCH')).toBe(true)
+  for (const slice of [body.production, body.sandbox]) {
+    expect(typeof slice.total).toBe('number')
+    expect(slice.allow + slice.deny).toBe(slice.total)
+    expect(Array.isArray(slice.byReason)).toBe(true)
+    expect(Array.isArray(slice.recent)).toBe(true)
+  }
+  // PAYLOAD_MISMATCH from dev-mode tests lands in sandbox (client_id = dev).
+  const mismatch =
+    body.production.byReason.some((r: any) => r.key === 'PAYLOAD_MISMATCH') ||
+    body.sandbox.byReason.some((r: any) => r.key === 'PAYLOAD_MISMATCH')
+  expect(mismatch).toBe(true)
 })
 
 test('/stats: a client (non-root) key → 403, not a data leak', async () => {
@@ -302,7 +307,7 @@ test('dashboard: served as data-free HTML shell', async () => {
 
 test('stats are DURABLE: a caught swap survives a working-set sweep', async () => {
   const mm = (s: any) => (s.byReason.find((r: any) => r.key === 'PAYLOAD_MISMATCH') || {}).count || 0
-  const before = (await get('/stats', MASTER)).body
+  const before = (await get('/stats', MASTER)).body.production
 
   // A decision is logged to the durable audit table, not the ephemeral one.
   store.recordEvent({
@@ -312,7 +317,7 @@ test('stats are DURABLE: a caught swap survives a working-set sweep', async () =
   // Nuke the working set (this is what deleted the metric before the fix).
   store.cleanupExpired()
 
-  const after = (await get('/stats', MASTER)).body
+  const after = (await get('/stats', MASTER)).body.production
   expect(after.total).toBe(before.total + 1)
   expect(mm(after)).toBe(mm(before) + 1) // the caught swap is STILL counted
   expect(after.byClient.some((c: any) => c.key === 'durability-probe')).toBe(true)
@@ -320,6 +325,18 @@ test('stats are DURABLE: a caught swap survives a working-set sweep', async () =
 
 test('stats recent is counts-only — no payment fields (retention-clean)', async () => {
   const { body } = await get('/stats', MASTER)
-  expect(body.recent.length).toBeGreaterThan(0)
-  expect(body.recent.every((r: any) => !('to' in r) && !('amount' in r) && !('currency' in r))).toBe(true)
+  expect(body.production.recent.length).toBeGreaterThan(0)
+  expect(body.production.recent.every((r: any) => !('to' in r) && !('amount' in r) && !('currency' in r))).toBe(true)
+})
+
+test('stats: sandbox (test env) keys are isolated from production', async () => {
+  const k = issueClient('public-sandbox-probe', 'test')
+  await post(
+    '/verify',
+    { intent: { from: 'sandbox', to: 'vendor', amount: '1.00', currency: 'USD' } },
+    k.fullKey,
+  )
+  const { body } = await get('/stats', MASTER)
+  expect(body.sandbox.byClient.some((c: any) => c.key === k.keyId)).toBe(true)
+  expect(body.production.byClient.some((c: any) => c.key === k.keyId)).toBe(false)
 })

@@ -200,17 +200,87 @@ interface CountRow {
 const insertEvent = db.prepare(
   'INSERT INTO verification_events (decision, reason, binding, client_id, created_at) VALUES (?, ?, ?, ?, ?)'
 )
-const countTotal = db.query<{ n: number }>('SELECT COUNT(*) AS n FROM verification_events')
-const countByDecision = db.query<CountRow>('SELECT decision AS k, COUNT(*) AS n FROM verification_events GROUP BY decision')
-const countByReason = db.query<CountRow>('SELECT reason AS k, COUNT(*) AS n FROM verification_events GROUP BY reason ORDER BY n DESC')
-const countByBinding = db.query<CountRow>('SELECT binding AS k, COUNT(*) AS n FROM verification_events GROUP BY binding')
-const countByClient = db.query<CountRow>('SELECT client_id AS k, COUNT(*) AS n FROM verification_events GROUP BY client_id ORDER BY n DESC')
-const selectRecent = db.query<{
-  decision: string; reason: string; binding: string; client_id: string; created_at: string
-}>(
-  `SELECT decision, reason, binding, client_id, created_at
-   FROM verification_events ORDER BY id DESC LIMIT 20`
-)
+// Env bucket for durable stats: root → production; dev → sandbox; client keys use clients.env.
+const EVENT_ENV_CASE = `CASE
+  WHEN e.client_id = 'root' THEN 'live'
+  WHEN e.client_id = 'dev' THEN 'test'
+  ELSE COALESCE(c.env, 'live')
+END`
+
+interface StatsSlice {
+  total: number
+  allow: number
+  deny: number
+  byReason: { key: string; count: number }[]
+  byBinding: { key: string; count: number }[]
+  byClient: { key: string; count: number }[]
+  recent: {
+    decision: string
+    reason: string
+    binding: string
+    clientId: string
+    createdAt: string
+  }[]
+}
+
+function statsForEnv(env: 'live' | 'test'): StatsSlice {
+  const toMap = (rows: CountRow[]) => rows.map((r) => ({ key: r.k, count: r.n }))
+  const countTotalEnv = db.query<{ n: number }>(
+    `SELECT COUNT(*) AS n FROM verification_events e
+     LEFT JOIN clients c ON e.client_id = c.key_id
+     WHERE (${EVENT_ENV_CASE}) = ?`
+  )
+  const countByDecisionEnv = db.query<CountRow>(
+    `SELECT e.decision AS k, COUNT(*) AS n FROM verification_events e
+     LEFT JOIN clients c ON e.client_id = c.key_id
+     WHERE (${EVENT_ENV_CASE}) = ?
+     GROUP BY e.decision`
+  )
+  const countByReasonEnv = db.query<CountRow>(
+    `SELECT e.reason AS k, COUNT(*) AS n FROM verification_events e
+     LEFT JOIN clients c ON e.client_id = c.key_id
+     WHERE (${EVENT_ENV_CASE}) = ?
+     GROUP BY e.reason ORDER BY n DESC`
+  )
+  const countByBindingEnv = db.query<CountRow>(
+    `SELECT e.binding AS k, COUNT(*) AS n FROM verification_events e
+     LEFT JOIN clients c ON e.client_id = c.key_id
+     WHERE (${EVENT_ENV_CASE}) = ?
+     GROUP BY e.binding`
+  )
+  const countByClientEnv = db.query<CountRow>(
+    `SELECT e.client_id AS k, COUNT(*) AS n FROM verification_events e
+     LEFT JOIN clients c ON e.client_id = c.key_id
+     WHERE (${EVENT_ENV_CASE}) = ?
+     GROUP BY e.client_id ORDER BY n DESC`
+  )
+  const selectRecentEnv = db.query<{
+    decision: string; reason: string; binding: string; client_id: string; created_at: string
+  }>(
+    `SELECT e.decision, e.reason, e.binding, e.client_id, e.created_at
+     FROM verification_events e
+     LEFT JOIN clients c ON e.client_id = c.key_id
+     WHERE (${EVENT_ENV_CASE}) = ?
+     ORDER BY e.id DESC LIMIT 20`
+  )
+
+  const decisions = Object.fromEntries(countByDecisionEnv.all(env).map((r) => [r.k, r.n]))
+  return {
+    total: countTotalEnv.get(env)?.n ?? 0,
+    allow: decisions.ALLOW ?? 0,
+    deny: decisions.DENY ?? 0,
+    byReason: toMap(countByReasonEnv.all(env)),
+    byBinding: toMap(countByBindingEnv.all(env)),
+    byClient: toMap(countByClientEnv.all(env)),
+    recent: selectRecentEnv.all(env).map((r) => ({
+      decision: r.decision,
+      reason: r.reason,
+      binding: r.binding,
+      clientId: r.client_id,
+      createdAt: r.created_at,
+    })),
+  }
+}
 
 function rowToVerification(r: VerificationRow): Verification {
   return {
@@ -395,22 +465,9 @@ export const store = {
 
   // --- dashboard aggregates (from the durable event log) -------------------
   stats() {
-    const toMap = (rows: CountRow[]) => rows.map((r) => ({ key: r.k, count: r.n }))
-    const decisions = Object.fromEntries(countByDecision.all().map((r) => [r.k, r.n]))
     return {
-      total: countTotal.get()?.n ?? 0,
-      allow: decisions.ALLOW ?? 0,
-      deny: decisions.DENY ?? 0,
-      byReason: toMap(countByReason.all()),
-      byBinding: toMap(countByBinding.all()),
-      byClient: toMap(countByClient.all()),
-      recent: selectRecent.all().map((r) => ({
-        decision: r.decision,
-        reason: r.reason,
-        binding: r.binding,
-        clientId: r.client_id,
-        createdAt: r.created_at,
-      })),
+      production: statsForEnv('live'),
+      sandbox: statsForEnv('test'),
     }
   },
 

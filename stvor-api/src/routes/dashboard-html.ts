@@ -19,16 +19,21 @@ export const DASHBOARD_HTML = /* html */ `<!doctype html>
   @media (prefers-color-scheme: dark) { input { background: #17171a; border-color: #333; } }
   button { font: inherit; font-weight: 600; padding: 8px 16px; border-radius: 8px; border: 0; background: #111; color: #fff; cursor: pointer; }
   @media (prefers-color-scheme: dark) { button { background: #e6e6e6; color: #111; } }
-  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 22px; }
+  .section { margin-bottom: 28px; padding-bottom: 8px; border-bottom: 1px solid #ececec; }
+  @media (prefers-color-scheme: dark) { .section { border-color: #232327; } }
+  .section:last-of-type { border-bottom: 0; }
+  .section h2 { font-size: 15px; margin: 0 0 4px; letter-spacing: -.01em; }
+  .section .hint { font-size: 12px; opacity: .6; margin: 0 0 14px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 18px; }
   .card { padding: 16px; border-radius: 12px; border: 1px solid #e2e2e2; background: #fff; }
   @media (prefers-color-scheme: dark) { .card { background: #17171a; border-color: #2a2a2e; } }
   .card .n { font-size: 28px; font-weight: 700; }
   .card .l { font-size: 12px; opacity: .65; text-transform: uppercase; letter-spacing: .04em; }
   .card.attack { border-color: #f2c2c2; } .card.attack .n { color: #c0392b; }
   .card.attack.zero { border-color: #e2e2e2; } .card.attack.zero .n { color: inherit; }
-  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 22px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 18px; }
   @media (max-width: 720px) { .grid2 { grid-template-columns: 1fr; } }
-  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; opacity: .65; margin: 0 0 8px; }
+  h3 { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; opacity: .65; margin: 0 0 8px; }
   table { width: 100%; border-collapse: collapse; font-size: 13px; }
   th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #ececec; }
   @media (prefers-color-scheme: dark) { th, td { border-color: #232327; } }
@@ -42,25 +47,16 @@ export const DASHBOARD_HTML = /* html */ `<!doctype html>
 </head>
 <body>
   <h1>Stvor · Dashboard</h1>
-  <p class="sub">Live verification counters. <span class="mismatch">PAYLOAD_MISMATCH</span> = caught destination swaps.</p>
+  <p class="sub">Production counters below. Sandbox (public test key) is separate — demo curls do not inflate caught swaps.</p>
 
   <div class="bar">
-    <input id="key" type="password" placeholder="API key (Bearer) — stored in this browser only" />
+    <input id="key" type="password" placeholder="Root API key (Bearer) — stored in this browser only" />
     <button id="save">Connect</button>
     <span id="status" class="sub" style="margin:0"></span>
   </div>
   <div id="err" class="err"></div>
 
-  <div class="cards" id="cards"></div>
-  <div class="grid2">
-    <div><h2>By reason</h2><table id="byReason"></table></div>
-    <div>
-      <h2>By binding</h2><table id="byBinding"></table>
-      <h2 style="margin-top:18px">By client</h2><table id="byClient"></table>
-    </div>
-  </div>
-  <h2>Last 20 <span style="font-weight:400;text-transform:none;opacity:.6">· durable audit log, counts only (no payment details)</span></h2>
-  <table id="recent"><thead><tr><th>time</th><th>decision</th><th>reason</th><th>binding</th><th>client</th></tr></thead><tbody></tbody></table>
+  <div id="sections"></div>
   <p class="foot" id="foot"></p>
 
 <script>
@@ -85,27 +81,40 @@ export const DASHBOARD_HTML = /* html */ `<!doctype html>
     } catch (e) { $('err').textContent = 'Fetch failed: ' + e }
   }
 
-  function render(s) {
-    const mismatch = (s.byReason.find(r => r.key === 'PAYLOAD_MISMATCH') || {}).count || 0
-    $('cards').innerHTML = [
-      ['total','Verifications', s.total, ''],
-      ['allow','Allow', s.allow, ''],
-      ['deny','Deny', s.deny, ''],
-      ['attack' + (mismatch ? '' : ' zero'),'Caught swaps', mismatch, ''],
-    ].map(([cls,l,n]) => '<div class="card ' + cls + '"><div class="n">' + n + '</div><div class="l">' + l + '</div></div>').join('')
-
-    const rows = (arr, hl) => arr.map(r =>
+  function rows(arr, hl) {
+    return arr.map(r =>
       '<tr><td class="' + (hl && r.key === 'PAYLOAD_MISMATCH' ? 'mismatch' : 'mono') + '">' + esc(r.key) + '</td><td>' + r.count + '</td></tr>').join('') || '<tr><td class="sub">—</td><td></td></tr>'
-    $('byReason').innerHTML = rows(s.byReason, true)
-    $('byBinding').innerHTML = rows(s.byBinding, false)
-    $('byClient').innerHTML = rows(s.byClient, false)
+  }
 
-    $('recent').querySelector('tbody').innerHTML = s.recent.map(r =>
-      '<tr><td>' + new Date(r.createdAt).toLocaleTimeString() + '</td>' +
-      '<td><span class="pill ' + (r.decision === 'ALLOW' ? 'allow' : 'deny') + '">' + r.decision + '</span></td>' +
-      '<td class="' + (r.reason === 'PAYLOAD_MISMATCH' ? 'mismatch' : '') + '">' + esc(r.reason) + '</td>' +
-      '<td>' + esc(r.binding) + '</td><td class="mono">' + esc(r.clientId) + '</td></tr>'
-    ).join('')
+  function renderSlice(s, id, title, hint) {
+    const mismatch = (s.byReason.find(r => r.key === 'PAYLOAD_MISMATCH') || {}).count || 0
+    return '<div class="section" id="' + id + '">' +
+      '<h2>' + title + '</h2><p class="hint">' + hint + '</p>' +
+      '<div class="cards">' + [
+        ['total','Verifications', s.total, ''],
+        ['allow','Allow', s.allow, ''],
+        ['deny','Deny', s.deny, ''],
+        ['attack' + (mismatch ? '' : ' zero'),'Caught swaps', mismatch, ''],
+      ].map(([cls,l,n]) => '<div class="card ' + cls + '"><div class="n">' + n + '</div><div class="l">' + l + '</div></div>').join('') + '</div>' +
+      '<div class="grid2">' +
+        '<div><h3>By reason</h3><table>' + rows(s.byReason, true) + '</table></div>' +
+        '<div><h3>By binding</h3><table>' + rows(s.byBinding, false) + '</table>' +
+        '<h3 style="margin-top:18px">By client</h3><table>' + rows(s.byClient, false) + '</table></div>' +
+      '</div>' +
+      '<h3>Last 20 <span style="font-weight:400;text-transform:none;opacity:.6">· counts only</span></h3>' +
+      '<table><thead><tr><th>time</th><th>decision</th><th>reason</th><th>binding</th><th>client</th></tr></thead><tbody>' +
+      s.recent.map(r =>
+        '<tr><td>' + new Date(r.createdAt).toLocaleTimeString() + '</td>' +
+        '<td><span class="pill ' + (r.decision === 'ALLOW' ? 'allow' : 'deny') + '">' + r.decision + '</span></td>' +
+        '<td class="' + (r.reason === 'PAYLOAD_MISMATCH' ? 'mismatch' : '') + '">' + esc(r.reason) + '</td>' +
+        '<td>' + esc(r.binding) + '</td><td class="mono">' + esc(r.clientId) + '</td></tr>'
+      ).join('') + '</tbody></table></div>'
+  }
+
+  function render(data) {
+    $('sections').innerHTML =
+      renderSlice(data.production, 'prod', 'Production (live keys + root)', 'Partner pilots and real traffic. <span class="mismatch">PAYLOAD_MISMATCH</span> = caught destination swaps.') +
+      renderSlice(data.sandbox, 'sandbox', 'Sandbox (test keys)', 'Public demo key on stvor.xyz — isolated from production metrics.')
   }
 
   function connect() {
