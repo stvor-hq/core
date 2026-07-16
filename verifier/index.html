@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Stvor · Offline Receipt Verifier</title>
+    <style>
+      :root { color-scheme: light dark; }
+      * { box-sizing: border-box; }
+      body {
+        font: 15px/1.5 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+        max-width: 860px; margin: 0 auto; padding: 32px 20px 64px; color: #111; background: #fafafa;
+      }
+      @media (prefers-color-scheme: dark) { body { color: #e6e6e6; background: #0e0e10; } }
+      h1 { font-size: 22px; margin: 0 0 4px; }
+      .sub { opacity: .7; margin: 0 0 24px; }
+      label { display: block; font-weight: 600; margin: 18px 0 6px; }
+      textarea {
+        width: 100%; min-height: 150px; font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace;
+        padding: 12px; border-radius: 10px; border: 1px solid #ccc; background: #fff; color: inherit; resize: vertical;
+      }
+      @media (prefers-color-scheme: dark) { textarea { background: #17171a; border-color: #333; } }
+      .row { display: flex; gap: 12px; align-items: center; margin-top: 20px; flex-wrap: wrap; }
+      button {
+        font: inherit; font-weight: 600; padding: 10px 20px; border-radius: 10px; border: 0;
+        background: #111; color: #fff; cursor: pointer;
+      }
+      @media (prefers-color-scheme: dark) { button { background: #e6e6e6; color: #111; } }
+      button.secondary { background: transparent; color: inherit; border: 1px solid #bbb; }
+      #verdict { margin-top: 22px; padding: 18px; border-radius: 12px; font-weight: 600; display: none; }
+      #verdict.ok { display: block; background: #e7f7ec; color: #0b6b2f; border: 1px solid #b7e4c7; }
+      #verdict.fail { display: block; background: #fdeaea; color: #a11; border: 1px solid #f2c2c2; }
+      #verdict .detail { display: block; margin-top: 8px; font-weight: 400; font-size: 13px; opacity: .85; }
+      dl { margin: 12px 0 0; display: grid; grid-template-columns: max-content 1fr; gap: 4px 14px; font-size: 13px; }
+      dt { font-weight: 600; opacity: .7; } dd { margin: 0; font-family: ui-monospace, monospace; word-break: break-all; }
+      .note { margin-top: 28px; font-size: 12.5px; opacity: .7; }
+      code { background: rgba(127,127,127,.14); padding: 1px 5px; border-radius: 5px; }
+    </style>
+  </head>
+  <body>
+    <h1>Stvor · Offline Receipt Verifier</h1>
+    <p class="sub">
+      Paste a Trust Receipt and the issuer key. Verification is 100% in your browser —
+      <strong>no network calls</strong>, nothing sent anywhere. You trust the math, not Stvor.
+    </p>
+
+    <label for="receipt">Trust Receipt (JSON)</label>
+    <textarea id="receipt" spellcheck="false" placeholder='{ "receiptId": "...", "to": "...", "signature": "...", "kid": "..." }'></textarea>
+
+    <label for="keys">Issuer key — a single JWK, or the published keyset <code>stvor-keys.json</code></label>
+    <textarea id="keys" spellcheck="false" placeholder='{ "kty": "EC", "crv": "P-256", "x": "...", "y": "...", "kid": "..." }'></textarea>
+
+    <div class="row">
+      <button id="verify">Verify offline</button>
+      <button id="sample" class="secondary" type="button">Load sample</button>
+    </div>
+
+    <div id="verdict"></div>
+
+    <p class="note">
+      Same canonicalization + ES256 verification code as the <code>@stvor/core</code> library and the
+      <code>stvor-verify</code> CLI — so a pass here means a pass anywhere. Works fully offline: save this
+      page and run it with your network disconnected.
+    </p>
+
+    <script type="module">
+      import { verifyReceiptOffline } from './stvor-core.js'
+
+      const $ = (id) => document.getElementById(id)
+      const verdict = $('verdict')
+
+      function show(ok, title, detail, receipt) {
+        verdict.className = ok ? 'ok' : 'fail'
+        let html = (ok ? '✅ ' : '❌ ') + title
+        if (detail) html += `<span class="detail">${detail}</span>`
+        if (ok && receipt) {
+          const f = (k) => (receipt[k] == null ? '' : `<dt>${k}</dt><dd>${String(receipt[k])}</dd>`)
+          html += '<dl>' + ['decision','binding','to','amount','currency','agentId','nonce','kid','commitmentId','txHash']
+            .map(f).join('') + '</dl>'
+        }
+        verdict.innerHTML = html
+      }
+
+      $('verify').addEventListener('click', async () => {
+        let receipt, keys
+        try { receipt = JSON.parse($('receipt').value) } catch { return show(false, 'Receipt is not valid JSON') }
+        try { keys = JSON.parse($('keys').value) } catch { return show(false, 'Key/keyset is not valid JSON') }
+        try {
+          const res = await verifyReceiptOffline(receipt, keys)
+          if (res.ok) show(true, 'AUTHENTIC — signature matches receipt contents', null, res.receipt)
+          else show(false, `INVALID — ${res.reason}`, res.detail)
+        } catch (err) {
+          show(false, 'Verification error', String(err))
+        }
+      })
+
+      $('sample').addEventListener('click', async () => {
+        // Best-effort local sample load; ignored if fixtures aren't served.
+        try {
+          const [rv, ks] = await Promise.all([
+            fetch('../fixtures/receipt-vectors.json').then((r) => r.json()),
+            fetch('../fixtures/keyset.json').then((r) => r.json()),
+          ])
+          $('receipt').value = JSON.stringify(rv[0].receipt, null, 2)
+          $('keys').value = JSON.stringify(ks, null, 2)
+        } catch {
+          show(false, 'Sample unavailable', 'Serve the repo root so ../fixtures/ is reachable, or paste manually.')
+        }
+      })
+    </script>
+  </body>
+</html>

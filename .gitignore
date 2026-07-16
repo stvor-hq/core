@@ -1,0 +1,19 @@
+node_modules/
+dist/
+.stvor/
+*.log
+.env
+.env.*
+.gstack/
+
+# local agent / tooling state — never project source
+.claude/
+
+# generated test-signing PRIVATE key. The PUBLIC key (fixtures/issuer.jwk),
+# the keyset, and the signed vectors are committed and verify on their own.
+# The private key is only needed to regenerate vectors (bun run vectors),
+# which mints a fresh one if it is absent — so it never belongs in git.
+fixtures/issuer.private.jwk
+
+# generated browser bundle (rebuild with: bun run build:verifier)
+verifier/stvor-core.js

@@ -1,0 +1,32 @@
+{
+  "name": "@stvor/sdk",
+  "version": "1.0.0",
+  "description": "Official TypeScript SDK for the Stvor trust verification platform",
+  "keywords": ["stvor", "trust", "verification", "ai-agents", "ats-1"],
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "bun": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "bun build src/index.ts --outfile dist/index.js --format esm && bun build src/index.ts --outfile dist/index.cjs --format cjs && tsc --emitDeclarationOnly --outDir dist",
+    "dev": "bun --watch src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@stvor/core": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "@types/node": "^22.10.0"
+  }
+}

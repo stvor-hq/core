@@ -1,0 +1,17 @@
+{
+  "keys": [
+    {
+      "kid": "key_4Cogca7EFBUMJSPM",
+      "jwk": {
+        "kty": "EC",
+        "crv": "P-256",
+        "x": "gag-xR341GmQaE03537RFXn-h6G2qn8JxNbY40kZYsA",
+        "y": "iTKytk16gA-y6EWFnqt99924kfmHMWPJKR4bMDyzEC8",
+        "kid": "key_4Cogca7EFBUMJSPM",
+        "use": "sig",
+        "alg": "ES256"
+      },
+      "notBefore": "2026-01-01T00:00:00.000Z"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "name": "orbserv-example",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "bun src/index.ts"
+  },
+  "dependencies": {
+    "@stvor/sdk": "workspace:*"
+  }
+}

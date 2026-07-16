@@ -1,0 +1,11 @@
+.git
+node_modules
+**/node_modules
+**/dist
+.stvor
+/data
+*.log
+.env
+.env.*
+/tmp
+verifier/stvor-core.js

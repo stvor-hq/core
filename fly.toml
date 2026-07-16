@@ -1,0 +1,49 @@
+# Stvor API — Fly.io. Change `app` and `primary_region` before first deploy.
+#
+# THREE THINGS THAT MUST STAY AS THEY ARE (each is a false-DENY or silent-fail):
+#   1. Exactly ONE machine. SQLite lives on one volume; a second machine gets a
+#      second, empty volume → a commitment made on A is COMMITMENT_NOT_FOUND on B
+#      → DENY on an honest payment. Do NOT `fly scale count 2`.
+#   2. auto_stop_machines = false / min_machines_running = 1. A slept machine
+#      cold-starts past the SDK's 500ms budget → fail-open → Stvor silently not
+#      running while the partner thinks they're protected.
+#   3. The signing key comes from the STVOR_SIGNING_KEY secret, never autogen.
+#
+# Safety does NOT depend on NODE_ENV. The server fails closed unless STVOR_DEV=1
+# is explicitly set — which it must NEVER be here. In prod: no STVOR_DEV, and a
+# STVOR_KEY secret + a STVOR_SIGNING_KEY secret are mandatory to boot at all.
+
+app = "stvor-api"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  NODE_ENV = "production"
+  STVOR_DB = "/data/stvor.db"
+  STVOR_KEYS_FILE = "/data/keys.json"
+  PORT = "3000"
+  # STVOR_DEV is intentionally absent. Never add it here.
+
+[mounts]
+  source = "stvor_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    interval = "15s"
+    timeout = "2s"
+    grace_period = "5s"
+    method = "GET"
+    path = "/health"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

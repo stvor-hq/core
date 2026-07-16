@@ -1,0 +1,57 @@
+[
+  {
+    "name": "simple",
+    "input": {
+      "to": "vendor_api_credits",
+      "amount": "50.00",
+      "currency": "USD"
+    },
+    "canonical": "{\"amount\":\"50.00\",\"currency\":\"USD\",\"to\":\"vendor_api_credits\"}",
+    "canonicalHex": "7b22616d6f756e74223a2235302e3030222c2263757272656e6379223a22555344222c22746f223a2276656e646f725f6170695f63726564697473227d",
+    "sha256": "08d68595b9783dfec4c2a2064e8259049430698e9e242ade42f8dd91c3770008"
+  },
+  {
+    "name": "key-order-irrelevant",
+    "input": {
+      "currency": "USD",
+      "amount": "50.00",
+      "to": "vendor_api_credits"
+    },
+    "canonical": "{\"amount\":\"50.00\",\"currency\":\"USD\",\"to\":\"vendor_api_credits\"}",
+    "canonicalHex": "7b22616d6f756e74223a2235302e3030222c2263757272656e6379223a22555344222c22746f223a2276656e646f725f6170695f63726564697473227d",
+    "sha256": "08d68595b9783dfec4c2a2064e8259049430698e9e242ade42f8dd91c3770008"
+  },
+  {
+    "name": "with-chain-asset",
+    "input": {
+      "to": "0xabc",
+      "amount": "1.5",
+      "currency": "USDC",
+      "chain": "base",
+      "asset": "erc20"
+    },
+    "canonical": "{\"amount\":\"1.5\",\"asset\":\"erc20\",\"chain\":\"base\",\"currency\":\"USDC\",\"to\":\"0xabc\"}",
+    "canonicalHex": "7b22616d6f756e74223a22312e35222c226173736574223a226572633230222c22636861696e223a2262617365222c2263757272656e6379223a2255534443222c22746f223a223078616263227d",
+    "sha256": "d955dbea049f03632b91d8ded5cf8a43fda81dd25a058e33f2b53fc47166c905"
+  },
+  {
+    "name": "amount-omitted",
+    "input": {
+      "to": "alice"
+    },
+    "canonical": "{\"to\":\"alice\"}",
+    "canonicalHex": "7b22746f223a22616c696365227d",
+    "sha256": "eef87b3a8b0c102cbc9ef3605dec573447d07a4038dd7dcec59c0a9ffc794808"
+  },
+  {
+    "name": "unicode",
+    "input": {
+      "to": "café",
+      "amount": "10.00",
+      "currency": "EUR"
+    },
+    "canonical": "{\"amount\":\"10.00\",\"currency\":\"EUR\",\"to\":\"café\"}",
+    "canonicalHex": "7b22616d6f756e74223a2231302e3030222c2263757272656e6379223a22455552222c22746f223a22636166c3a9227d",
+    "sha256": "6cd38d403d52819eb6fa11108d65934c7f6c759b5286129da3a90252e829b043"
+  }
+]

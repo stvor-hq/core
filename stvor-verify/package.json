@@ -1,0 +1,24 @@
+{
+  "name": "@stvor/verify",
+  "version": "0.1.0",
+  "description": "stvor-verify — offline Trust Receipt verifier. Zero network calls.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "stvor-verify": "./dist/cli.js"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "bun build src/cli.ts --outfile dist/cli.js --target node && chmod +x dist/cli.js",
+    "start": "bun src/cli.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@stvor/core": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "@types/node": "^22.10.0"
+  }
+}
