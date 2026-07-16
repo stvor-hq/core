@@ -13,7 +13,7 @@
 # is explicitly set — which it must NEVER be here. In prod: no STVOR_DEV, and a
 # STVOR_KEY secret + a STVOR_SIGNING_KEY secret are mandatory to boot at all.
 
-app = "stvor-api"
+app = "core-6k0kcq"
 primary_region = "iad"
 
 [build]
