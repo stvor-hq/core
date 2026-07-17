@@ -8,7 +8,7 @@
     "build:sdk": "bun run --cwd stvor-sdk build",
     "build:api": "bun run --cwd stvor-api build",
     "build:cli": "bun run --cwd stvor-verify build",
-    "build:verifier": "bun build stvor-core/src/index.ts --outfile verifier/stvor-core.js --format esm --target browser",
+    "build:verifier": "bun run scripts/build-verifier.ts",
     "build": "bun run build:core && bun run build:sdk && bun run build:api && bun run build:cli && bun run build:verifier",
     "vectors": "bun run scripts/make-vectors.ts",
     "example:orbserv": "bun run --cwd examples/orbserv start",

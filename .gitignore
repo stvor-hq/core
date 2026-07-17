@@ -14,6 +14,3 @@ dist/
 # The private key is only needed to regenerate vectors (bun run vectors),
 # which mints a fresh one if it is absent — so it never belongs in git.
 fixtures/issuer.private.jwk
-
-# generated browser bundle (rebuild with: bun run build:verifier)
-verifier/stvor-core.js
