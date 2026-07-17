@@ -7,6 +7,6 @@
     "start": "bun src/index.ts"
   },
   "dependencies": {
-    "@stvor/sdk": "workspace:*"
+    "@stvor/client": "workspace:*"
   }
 }

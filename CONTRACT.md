@@ -210,7 +210,7 @@ Reference tooling (all run the same `@stvor/core` code):
 - **Library:** `npm install @stvor/core` → `verifyReceiptOffline(receipt, jwkOrKeyset)`
 - **CLI:** `npm i -g @stvor/verify` → `stvor-verify receipt.json --keyset stvor-keys.json` → `OK` / `FAIL <reason>`, exit `0`/`1`
 - **Browser:** `verifier/index.html` in this repo — one self-contained file; paste receipt + key, verdict client-side, works offline from disk
-- The payment client (`commit` / `verify` / `settle`) is in `stvor-sdk/`. Do **not** `npm install @stvor/sdk` — that name is an unrelated older library; use the REST endpoints above or vendor `stvor-sdk/` until it publishes under its final name.
+- **Payment client:** `npm install @stvor/client` → `commit` / `verify` / `settle`, plus the fail mode in §6 (`onError`, `timeoutMs`, `degraded`). Do **not** `npm install @stvor/sdk` — that name is an unrelated older library (client-side E2EE), not this.
 
 ## 6. Fail mode
 

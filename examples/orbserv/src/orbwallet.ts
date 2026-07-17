@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto'
-import type { Intent } from '@stvor/sdk'
+import type { Intent } from '@stvor/client'
 
 /**
  * A stand-in for OrbWallet — the partner's agentic payment runtime.

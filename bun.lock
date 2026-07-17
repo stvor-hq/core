@@ -9,7 +9,7 @@
       "name": "orbserv-example",
       "version": "0.0.0",
       "dependencies": {
-        "@stvor/sdk": "workspace:*",
+        "@stvor/client": "workspace:*",
       },
     },
     "stvor-api": {
@@ -40,8 +40,8 @@
       },
     },
     "stvor-sdk": {
-      "name": "@stvor/sdk",
-      "version": "1.0.0",
+      "name": "@stvor/client",
+      "version": "0.1.0",
       "dependencies": {
         "@stvor/core": "workspace:*",
       },
@@ -88,9 +88,9 @@
 
     "@stvor/api": ["@stvor/api@workspace:stvor-api"],
 
-    "@stvor/core": ["@stvor/core@workspace:stvor-core"],
+    "@stvor/client": ["@stvor/client@workspace:stvor-sdk"],
 
-    "@stvor/sdk": ["@stvor/sdk@workspace:stvor-sdk"],
+    "@stvor/core": ["@stvor/core@workspace:stvor-core"],
 
     "@stvor/verify": ["@stvor/verify@workspace:stvor-verify"],
 

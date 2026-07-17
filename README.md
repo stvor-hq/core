@@ -14,7 +14,7 @@ Stvor, no trust in its server, just the math.
 |---|---|
 | `stvor-core` | RFC 8785 canonicalization, ES256 / P-256 signing, offline receipt verification. Zero network. |
 | `stvor-api` | The verification service (Fastify + SQLite). `commit → verify → settle`. |
-| `stvor-sdk` | TypeScript client. |
+| `stvor-sdk` | `@stvor/client` — TypeScript client (commit/verify/settle + fail mode). |
 | `stvor-verify` | `stvor-verify` CLI — offline receipt checker. |
 | `verifier/` | Single-page browser verifier (paste receipt + key → verdict, fully client-side). |
 | `examples/orbserv` | Reference partner integration (~20 lines). |

@@ -14,7 +14,7 @@
  *
  * Run:  bun run example:orbserv   (with the API running on :3000)
  */
-import { Stvor, generateKeyPair, type Intent, type TrustReceipt, type KeyRegistry } from '@stvor/sdk'
+import { Stvor, generateKeyPair, type Intent, type TrustReceipt, type KeyRegistry } from '@stvor/client'
 import { OrbWallet } from './orbwallet.js'
 
 const stvor = new Stvor({

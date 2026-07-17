@@ -44,7 +44,7 @@ Expected output:
 ## The whole integration
 
 ```ts
-import { Stvor, generateKeyPair } from '@stvor/sdk'
+import { Stvor, generateKeyPair } from '@stvor/client'
 
 const stvor = new Stvor({ apiKey: process.env.STVOR_KEY, onError: 'allow' })
 const agentKey = await generateKeyPair() // the agent's own identity key

@@ -6,7 +6,7 @@ loses trust. The code is the source of truth; make the site match it. Reference:
 
 | # | Where | Says (wrong) | Should say (matches code) |
 |---|---|---|---|
-| 1 | Install snippet | `npm install @stvor/web3` → **404, package does not exist** | The published package name. This repo ships `@stvor/sdk` (client) and `@stvor/core` (verification). Pick the real published name and use it everywhere. |
+| 1 | Install snippet | `npm install @stvor/web3` → **404, package does not exist** | The real published names: `@stvor/core` (offline verify), `@stvor/verify` (CLI), `@stvor/client` (payment client). **Never `@stvor/sdk`** — that's an unrelated older E2EE library. Use these everywhere. |
 | 2 | Curl / API docs | `nous.stvor.xyz/api/v1/agents/register` | One base URL + **flat paths, no `/api/v1`**: `POST /commitments`, `POST /verify`, `POST /receipt`. There is no `/agents/register` endpoint. |
 | 3 | Crypto description | ed25519 (in places) | **ES256 / P-256** (IEEE-P1363). The code has only ever been P-256. Remove every ed25519 mention. |
 | 4 | Value prop | Counterparty **trust scoring** as a live feature | Not implemented — the engine is a stub. Remove the trust-scoring claim until it is real (see [CONTRACT.md §7](CONTRACT.md)). Lead instead with the cryptographic binding, which is real and demonstrable. |
