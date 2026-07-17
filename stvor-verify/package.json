@@ -8,6 +8,8 @@
     "stvor-verify": "./dist/cli.js"
   },
   "files": ["dist"],
+  "publishConfig": { "access": "public" },
+  "repository": { "type": "git", "url": "https://github.com/stvor-hq/core.git", "directory": "stvor-verify" },
   "scripts": {
     "build": "bun build src/cli.ts --outfile dist/cli.js --target node && chmod +x dist/cli.js",
     "start": "bun src/cli.ts",

@@ -16,6 +16,8 @@
     }
   },
   "files": ["dist"],
+  "publishConfig": { "access": "public" },
+  "repository": { "type": "git", "url": "https://github.com/stvor-hq/core.git", "directory": "stvor-core" },
   "scripts": {
     "build": "bun build src/index.ts --outfile dist/index.js --format esm && bun build src/index.ts --outfile dist/index.cjs --format cjs && tsc --emitDeclarationOnly --outDir dist",
     "typecheck": "tsc --noEmit",
