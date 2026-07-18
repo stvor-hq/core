@@ -12,6 +12,10 @@ export {
   type TrustReceipt,
   type Decision,
   type Binding,
+  type SigAlg,
+  type ReceiptVerifyResult,
   type EcJwk,
+  type OkpJwk,
+  type AgentJwk,
   type KeyRegistry,
 } from './types.js'

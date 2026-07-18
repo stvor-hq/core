@@ -229,6 +229,89 @@ test('T2: cannot settle a DENY', async () => {
   expect(s.status).toBe(422)
 })
 
+// --- Ed25519 agent keys (E1–E7) --------------------------------------------
+
+async function commitSigned(
+  payment: { to: string; amount?: string; currency?: string },
+  agentId: string,
+  alg: 'EdDSA' | 'ES256'
+) {
+  const payloadHash = await hashPaymentPayload(payment)
+  const nonce = `n_${Math.random().toString(36).slice(2)}`
+  const expiresAt = new Date(Date.now() + 60_000).toISOString()
+  const kp = await generateKeyPair(alg)
+  const agentSignature = await signCanonical(
+    commitmentSigningPayload({ agentId, alg: 'sha256', expiresAt, nonce, payloadHash }),
+    kp.privateJwk
+  )
+  const res = await post('/commitments', { agentId, payloadHash, alg: 'sha256', nonce, expiresAt, agentSignature, agentPubkey: kp.publicJwk })
+  return { ...res, kp }
+}
+
+test('E: Ed25519 agent commitment → agent-committed; receipt verifies BOTH sigs offline', async () => {
+  const agentId = 'solana_agent'
+  const { status, body: c } = await commitSigned({ to: 'vendor', amount: '50.00', currency: 'USD' }, agentId, 'EdDSA')
+  expect(status).toBe(201)
+  const { body } = await post('/verify', {
+    intent: { from: agentId, to: 'vendor', amount: '50.00', currency: 'USD' },
+    commitmentId: c.commitmentId, agentId,
+  })
+  expect(body.decision).toBe('ALLOW')
+  expect(body.binding).toBe('agent-committed')
+  expect(body.receipt.agentSigAlg).toBe('EdDSA')
+  expect(body.receipt.agentPubkey.kty).toBe('OKP')
+  expect(body.receipt.agentPubkey.d).toBeUndefined() // public only
+
+  const v = await verifyReceiptOffline(body.receipt, issuerJwk)
+  expect(v.ok).toBe(true)
+  expect(v.issuerSignature).toBe('valid')
+  expect(v.agentSignature).toBe('valid') // proven from the embedded Ed25519 key alone
+})
+
+test('E: Ed25519 swap → DENY PAYLOAD_MISMATCH; DENY receipt still verifies both sigs offline', async () => {
+  const agentId = 'solana_agent2'
+  const { body: c } = await commitSigned({ to: 'vendor', amount: '50.00', currency: 'USD' }, agentId, 'EdDSA')
+  const { body } = await post('/verify', {
+    intent: { from: agentId, to: 'ATTACKER', amount: '50.00', currency: 'USD' },
+    commitmentId: c.commitmentId, agentId,
+  })
+  expect(body.decision).toBe('DENY')
+  expect(body.reason).toBe('PAYLOAD_MISMATCH')
+  expect(body.receipt.to).toBe('ATTACKER')
+  const v = await verifyReceiptOffline(body.receipt, issuerJwk)
+  expect(v.ok).toBe(true) // the DENY is an authentic signed artifact
+  expect(v.agentSignature).toBe('valid') // agent sig is over the ORIGINAL commitment
+})
+
+test('E1: unsupported agent key type → 400 UNSUPPORTED_AGENT_KEY', async () => {
+  const payloadHash = await hashPaymentPayload({ to: 'x', amount: '1.00' })
+  const { status, body } = await post('/commitments', {
+    agentId: 'weird', payloadHash, alg: 'sha256', nonce: 'n_weird',
+    expiresAt: new Date(Date.now() + 60_000).toISOString(),
+    agentSignature: 'AAAA' + 'B'.repeat(80),
+    agentPubkey: { kty: 'EC', crv: 'secp256k1', x: 'aaa', y: 'bbb' },
+  })
+  expect(status).toBe(400)
+  expect(body.error).toBe('UNSUPPORTED_AGENT_KEY')
+})
+
+test('E: settlement receipt of an agent-committed decision carries the full agent proof', async () => {
+  const agentId = 'settle_agent'
+  const { body: c } = await commitSigned({ to: 'vendor', amount: '1.00', currency: 'USD' }, agentId, 'EdDSA')
+  const { body: v } = await post('/verify', {
+    intent: { from: agentId, to: 'vendor', amount: '1.00', currency: 'USD' },
+    commitmentId: c.commitmentId, agentId,
+  })
+  expect(v.decision).toBe('ALLOW')
+  const s = await post('/receipt', { verificationId: v.id, txHash: '0xabc' })
+  expect(s.status).toBe(201)
+  expect(s.body.txHash).toBe('0xabc')
+  expect(s.body.agentPubkey.kty).toBe('OKP')
+  const res = await verifyReceiptOffline(s.body, issuerJwk)
+  expect(res.ok).toBe(true)
+  expect(res.agentSignature).toBe('valid') // settlement receipt is independently verifiable too
+})
+
 // --- per-client keys + /stats ---------------------------------------------
 // These run LAST. The first one turns on a master key (lazily read), which
 // disables open mode — from here on every request needs a valid key.

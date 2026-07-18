@@ -65,6 +65,11 @@ export async function receiptRoutes(app: FastifyInstance) {
       expiresAt: v.expiresAt,
       kid: issuer.kid,
       commitmentId: v.commitmentId,
+      // Carry the FULL agent-committed proof forward, so the settlement receipt
+      // is independently verifiable exactly like the verification receipt.
+      agentPubkey: v.receipt.agentPubkey,
+      agentSigAlg: v.receipt.agentSigAlg,
+      agentCommitment: v.receipt.agentCommitment,
       agentKeyThumbprint: v.receipt.agentKeyThumbprint,
       agentSignature: v.receipt.agentSignature,
       txHash,

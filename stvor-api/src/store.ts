@@ -1,7 +1,7 @@
 import { Database } from 'bun:sqlite'
 import { mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
-import type { TrustReceipt, EcJwk } from '@stvor/core'
+import type { TrustReceipt, AgentJwk } from '@stvor/core'
 import type { Verification, Commitment, Settlement, Decision, Binding, Client } from './types.js'
 
 const DB_PATH = process.env.STVOR_DB ?? '.stvor/stvor.db'
@@ -311,7 +311,7 @@ function rowToCommitment(r: CommitmentRow): Commitment {
     alg: r.alg as 'sha256',
     nonce: r.nonce,
     agentSignature: r.agent_signature ?? undefined,
-    agentPubkey: r.agent_pubkey ? (JSON.parse(r.agent_pubkey) as EcJwk) : undefined,
+    agentPubkey: r.agent_pubkey ? (JSON.parse(r.agent_pubkey) as AgentJwk) : undefined,
     agentKeyThumbprint: r.agent_key_thumbprint ?? undefined,
     createdAt: r.created_at,
     expiresAt: r.expires_at,

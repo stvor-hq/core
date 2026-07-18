@@ -16,7 +16,7 @@
       "expiresAt": "2026-01-01T00:05:00.000Z",
       "kid": "key_4Cogca7EFBUMJSPM",
       "commitmentId": "cmt_vector0001",
-      "signature": "E4Tywahl7DcZ5ClAkW1q462fPLNQAbEceahl1cqxqep8BZzfGBuvrn06qkh2GRGNmQSvuWOCX7gZD7z4-pFNSw"
+      "signature": "su4U_-XgVq72MscL-umBvmKUDW9Or4d8eh4vFh2m0kkMgh-NFQPDBF8zUc4_L8tIv6qALOmfW4MUXQJJ9mIrhQ"
     },
     "expected": "OK"
   },
@@ -37,7 +37,7 @@
       "expiresAt": "2026-01-01T00:05:00.000Z",
       "kid": "key_4Cogca7EFBUMJSPM",
       "commitmentId": "cmt_vector0001",
-      "signature": "5kEE4G4zR5Y7iCCRLDnj_k_HzRzaIYvEX2_tvLwuPMy6nLLeFuwDMo8BW0_I64tljqHEJnxkIZ5frPzcb5EzFg"
+      "signature": "VG0oEYCvnFo0nP4b3WOeeo24D9KtPT7AP7VhNJbW6QpJWO7fDHOgl6NfODhJdw7WnknG3Mu1yEh_vh8IsWjE2g"
     },
     "expected": "OK"
   },
@@ -58,10 +58,10 @@
       "expiresAt": "2026-01-01T00:05:00.000Z",
       "kid": "key_4Cogca7EFBUMJSPM",
       "commitmentId": "cmt_vector0001",
-      "signature": "E4Tywahl7DcZ5ClAkW1q462fPLNQAbEceahl1cqxqep8BZzfGBuvrn06qkh2GRGNmQSvuWOCX7gZD7z4-pFNSw"
+      "signature": "su4U_-XgVq72MscL-umBvmKUDW9Or4d8eh4vFh2m0kkMgh-NFQPDBF8zUc4_L8tIv6qALOmfW4MUXQJJ9mIrhQ"
     },
     "expected": "FAIL",
-    "reason": "BAD_SIGNATURE"
+    "reason": "BAD_ISSUER_SIGNATURE"
   },
   {
     "name": "tampered-amount",
@@ -80,10 +80,10 @@
       "expiresAt": "2026-01-01T00:05:00.000Z",
       "kid": "key_4Cogca7EFBUMJSPM",
       "commitmentId": "cmt_vector0001",
-      "signature": "E4Tywahl7DcZ5ClAkW1q462fPLNQAbEceahl1cqxqep8BZzfGBuvrn06qkh2GRGNmQSvuWOCX7gZD7z4-pFNSw"
+      "signature": "su4U_-XgVq72MscL-umBvmKUDW9Or4d8eh4vFh2m0kkMgh-NFQPDBF8zUc4_L8tIv6qALOmfW4MUXQJJ9mIrhQ"
     },
     "expected": "FAIL",
-    "reason": "BAD_SIGNATURE"
+    "reason": "BAD_ISSUER_SIGNATURE"
   },
   {
     "name": "tampered-decision",
@@ -102,32 +102,10 @@
       "expiresAt": "2026-01-01T00:05:00.000Z",
       "kid": "key_4Cogca7EFBUMJSPM",
       "commitmentId": "cmt_vector0001",
-      "signature": "5kEE4G4zR5Y7iCCRLDnj_k_HzRzaIYvEX2_tvLwuPMy6nLLeFuwDMo8BW0_I64tljqHEJnxkIZ5frPzcb5EzFg"
+      "signature": "VG0oEYCvnFo0nP4b3WOeeo24D9KtPT7AP7VhNJbW6QpJWO7fDHOgl6NfODhJdw7WnknG3Mu1yEh_vh8IsWjE2g"
     },
     "expected": "FAIL",
-    "reason": "BAD_SIGNATURE"
-  },
-  {
-    "name": "tampered-expiry",
-    "receipt": {
-      "receiptId": "rec_vector0001",
-      "verificationId": "ver_vector0001",
-      "binding": "committed",
-      "agentId": "agent_demo",
-      "to": "vendor_api_credits",
-      "amount": "50.00",
-      "currency": "USD",
-      "nonce": "nonce_demo_0001",
-      "decision": "ALLOW",
-      "reason": "PAYLOAD_MATCH",
-      "issuedAt": "2026-01-01T00:00:00.000Z",
-      "expiresAt": "2030-01-01T00:00:00.000Z",
-      "kid": "key_4Cogca7EFBUMJSPM",
-      "commitmentId": "cmt_vector0001",
-      "signature": "E4Tywahl7DcZ5ClAkW1q462fPLNQAbEceahl1cqxqep8BZzfGBuvrn06qkh2GRGNmQSvuWOCX7gZD7z4-pFNSw"
-    },
-    "expected": "FAIL",
-    "reason": "BAD_SIGNATURE"
+    "reason": "BAD_ISSUER_SIGNATURE"
   },
   {
     "name": "unknown-kid",
@@ -146,9 +124,201 @@
       "expiresAt": "2026-01-01T00:05:00.000Z",
       "kid": "key_deadbeefdeadbeef",
       "commitmentId": "cmt_vector0001",
-      "signature": "E4Tywahl7DcZ5ClAkW1q462fPLNQAbEceahl1cqxqep8BZzfGBuvrn06qkh2GRGNmQSvuWOCX7gZD7z4-pFNSw"
+      "signature": "su4U_-XgVq72MscL-umBvmKUDW9Or4d8eh4vFh2m0kkMgh-NFQPDBF8zUc4_L8tIv6qALOmfW4MUXQJJ9mIrhQ"
     },
     "expected": "FAIL",
     "reason": "UNKNOWN_KEY"
+  },
+  {
+    "name": "ed25519-agent-committed-valid",
+    "receipt": {
+      "receiptId": "rec_ac_ed",
+      "verificationId": "ver_ac",
+      "binding": "agent-committed",
+      "agentId": "agent_demo",
+      "to": "vendor_api_credits",
+      "amount": "50.00",
+      "currency": "USD",
+      "nonce": "nonce_ac_0001",
+      "decision": "ALLOW",
+      "reason": "PAYLOAD_MATCH",
+      "issuedAt": "2026-01-01T00:00:00.000Z",
+      "expiresAt": "2026-01-01T00:05:00.000Z",
+      "kid": "key_4Cogca7EFBUMJSPM",
+      "commitmentId": "cmt_ac",
+      "agentPubkey": {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "x": "0onLY_UvIaIMg3I9euvZSnh4Yu5l5zTAQAoY_2wHwvI",
+        "kid": "key_JE4-1DMhtZj_YiOx"
+      },
+      "agentSigAlg": "EdDSA",
+      "agentCommitment": {
+        "agentId": "agent_demo",
+        "alg": "sha256",
+        "expiresAt": "2026-01-01T00:05:00.000Z",
+        "nonce": "nonce_ac_0001",
+        "payloadHash": "08d68595b9783dfec4c2a2064e8259049430698e9e242ade42f8dd91c3770008"
+      },
+      "agentKeyThumbprint": "JE4-1DMhtZj_YiOx-c7PSXZycM92otBXTmKTMGfVaX4",
+      "agentSignature": "Dp4WwW7bKTa_T8PlpSyMeIegTKQ2Zl9vOM-m7Hm3Wv3U3GQHVqgGD7VFpZmIxMT8jNrLgBHguQznua_5pCWFBg",
+      "signature": "bUoSyg2UUrre67YbwfOxnVGD7dE7I7Sh2lmR-CD_uT2C4KBclfkbtaS7-LngwV4n5XYTZOeEicrdMex5iI1b9A"
+    },
+    "expected": "OK",
+    "agentSignature": "valid"
+  },
+  {
+    "name": "p256-agent-committed-valid",
+    "receipt": {
+      "receiptId": "rec_ac_p256",
+      "verificationId": "ver_ac",
+      "binding": "agent-committed",
+      "agentId": "agent_demo",
+      "to": "vendor_api_credits",
+      "amount": "50.00",
+      "currency": "USD",
+      "nonce": "nonce_ac_0001",
+      "decision": "ALLOW",
+      "reason": "PAYLOAD_MATCH",
+      "issuedAt": "2026-01-01T00:00:00.000Z",
+      "expiresAt": "2026-01-01T00:05:00.000Z",
+      "kid": "key_4Cogca7EFBUMJSPM",
+      "commitmentId": "cmt_ac",
+      "agentPubkey": {
+        "kty": "EC",
+        "crv": "P-256",
+        "x": "rfj2FqCXLPz-ThP_9gPQvvlqIHutmwrlcCzSn-l5WOg",
+        "y": "pXq8MVL5zit5Oi7og1if-nM4XNsC4EcyQGUP51evsfo",
+        "kid": "key_7BiW2EPgz3w5IQK7"
+      },
+      "agentSigAlg": "ES256",
+      "agentCommitment": {
+        "agentId": "agent_demo",
+        "alg": "sha256",
+        "expiresAt": "2026-01-01T00:05:00.000Z",
+        "nonce": "nonce_ac_0001",
+        "payloadHash": "08d68595b9783dfec4c2a2064e8259049430698e9e242ade42f8dd91c3770008"
+      },
+      "agentKeyThumbprint": "7BiW2EPgz3w5IQK7ORROo_sZdv_6MocwoojBD4BxjS4",
+      "agentSignature": "VYnF8v69YQmwli5ksr6Q337IJdpPNS34Wzaew0PxmfLQrt0tgrja10T3f3mV4sGkaLL4Txda-7oUkx_ALuUL7g",
+      "signature": "gxHSrPDNH0MEcFIzIuLG0Es830GeAb4NpqFmFQ0t6sLRCekj2yXIOIqNBWejeilCofkdC2GPfyWB2rU9Wxk3Ow"
+    },
+    "expected": "OK",
+    "agentSignature": "valid"
+  },
+  {
+    "name": "agent-committed-tampered-to",
+    "receipt": {
+      "receiptId": "rec_ac_ed",
+      "verificationId": "ver_ac",
+      "binding": "agent-committed",
+      "agentId": "agent_demo",
+      "to": "0xattacker",
+      "amount": "50.00",
+      "currency": "USD",
+      "nonce": "nonce_ac_0001",
+      "decision": "ALLOW",
+      "reason": "PAYLOAD_MATCH",
+      "issuedAt": "2026-01-01T00:00:00.000Z",
+      "expiresAt": "2026-01-01T00:05:00.000Z",
+      "kid": "key_4Cogca7EFBUMJSPM",
+      "commitmentId": "cmt_ac",
+      "agentPubkey": {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "x": "0onLY_UvIaIMg3I9euvZSnh4Yu5l5zTAQAoY_2wHwvI",
+        "kid": "key_JE4-1DMhtZj_YiOx"
+      },
+      "agentSigAlg": "EdDSA",
+      "agentCommitment": {
+        "agentId": "agent_demo",
+        "alg": "sha256",
+        "expiresAt": "2026-01-01T00:05:00.000Z",
+        "nonce": "nonce_ac_0001",
+        "payloadHash": "08d68595b9783dfec4c2a2064e8259049430698e9e242ade42f8dd91c3770008"
+      },
+      "agentKeyThumbprint": "JE4-1DMhtZj_YiOx-c7PSXZycM92otBXTmKTMGfVaX4",
+      "agentSignature": "Dp4WwW7bKTa_T8PlpSyMeIegTKQ2Zl9vOM-m7Hm3Wv3U3GQHVqgGD7VFpZmIxMT8jNrLgBHguQznua_5pCWFBg",
+      "signature": "bUoSyg2UUrre67YbwfOxnVGD7dE7I7Sh2lmR-CD_uT2C4KBclfkbtaS7-LngwV4n5XYTZOeEicrdMex5iI1b9A"
+    },
+    "expected": "FAIL",
+    "reason": "BAD_ISSUER_SIGNATURE"
+  },
+  {
+    "name": "agent-committed-forged-agent-sig",
+    "receipt": {
+      "receiptId": "rec_ac_forged",
+      "verificationId": "ver_ac",
+      "binding": "agent-committed",
+      "agentId": "agent_demo",
+      "to": "vendor_api_credits",
+      "amount": "50.00",
+      "currency": "USD",
+      "nonce": "nonce_ac_0001",
+      "decision": "ALLOW",
+      "reason": "PAYLOAD_MATCH",
+      "issuedAt": "2026-01-01T00:00:00.000Z",
+      "expiresAt": "2026-01-01T00:05:00.000Z",
+      "kid": "key_4Cogca7EFBUMJSPM",
+      "commitmentId": "cmt_ac",
+      "agentPubkey": {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "x": "0onLY_UvIaIMg3I9euvZSnh4Yu5l5zTAQAoY_2wHwvI",
+        "kid": "key_JE4-1DMhtZj_YiOx"
+      },
+      "agentSigAlg": "EdDSA",
+      "agentCommitment": {
+        "agentId": "agent_demo",
+        "alg": "sha256",
+        "expiresAt": "2026-01-01T00:05:00.000Z",
+        "nonce": "nonce_ac_0001",
+        "payloadHash": "08d68595b9783dfec4c2a2064e8259049430698e9e242ade42f8dd91c3770008"
+      },
+      "agentKeyThumbprint": "JE4-1DMhtZj_YiOx-c7PSXZycM92otBXTmKTMGfVaX4",
+      "agentSignature": "q2wXM30KyuUlnoE7T-1cwJzfVT9eN5CfW9iVCqclADuh3sdzhdKK8IUUItQDa9qburEfBvEfhhKzoWcgCcfgCQ",
+      "signature": "zoMMyUUau16lPBfsK2yJJf5KeXxQlmFaKaDXaKd415KUXiIipCoSPElWHdMFoxmuhy9xoPEWTCuql1Fo_Mb4PA"
+    },
+    "expected": "FAIL",
+    "reason": "BAD_AGENT_SIGNATURE"
+  },
+  {
+    "name": "cross-alg-ed25519-sig-as-p256",
+    "receipt": {
+      "receiptId": "rec_ac_crossalg",
+      "verificationId": "ver_ac",
+      "binding": "agent-committed",
+      "agentId": "agent_demo",
+      "to": "vendor_api_credits",
+      "amount": "50.00",
+      "currency": "USD",
+      "nonce": "nonce_ac_0001",
+      "decision": "ALLOW",
+      "reason": "PAYLOAD_MATCH",
+      "issuedAt": "2026-01-01T00:00:00.000Z",
+      "expiresAt": "2026-01-01T00:05:00.000Z",
+      "kid": "key_4Cogca7EFBUMJSPM",
+      "commitmentId": "cmt_ac",
+      "agentPubkey": {
+        "kty": "EC",
+        "crv": "P-256",
+        "x": "ylxUNtc9HhvN58PS-TGTEPHKylyFAXkn4UlzaWCwesk",
+        "y": "23atzf8RMAMhtPg6EOn3NEWRP9_MYFIJNj0zPLMF5e0",
+        "kid": "key_5DAHLlbwWocMXqpn"
+      },
+      "agentSigAlg": "ES256",
+      "agentCommitment": {
+        "agentId": "agent_demo",
+        "alg": "sha256",
+        "expiresAt": "2026-01-01T00:05:00.000Z",
+        "nonce": "nonce_ac_0001",
+        "payloadHash": "08d68595b9783dfec4c2a2064e8259049430698e9e242ade42f8dd91c3770008"
+      },
+      "agentKeyThumbprint": "5DAHLlbwWocMXqpnrnVFHBYZefgwRDgz8F41Id616ZE",
+      "agentSignature": "Dp4WwW7bKTa_T8PlpSyMeIegTKQ2Zl9vOM-m7Hm3Wv3U3GQHVqgGD7VFpZmIxMT8jNrLgBHguQznua_5pCWFBg",
+      "signature": "Z_JaouagQxCc5qFaOGCNHeEplH59Fr-_QpqrJrF0DPzLo22zfK4TfDTWCzVpdmGzai_psXmoylHxZ4iNctTy-A"
+    },
+    "expected": "FAIL",
+    "reason": "BAD_AGENT_SIGNATURE"
   }
 ]

@@ -1,6 +1,6 @@
 {
   "name": "@stvor/verify",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "stvor-verify — offline Trust Receipt verifier. Zero network calls.",
   "license": "MIT",
   "type": "module",

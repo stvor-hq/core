@@ -30,11 +30,13 @@ async function main() {
   const keyset = await stvor.keyset()
   check('GET /.well-known/stvor-keys.json has keys', (keyset.keys?.length ?? 0) > 0)
 
-  const agentKey = await generateKeyPair()
+  // Ed25519 agent key — what a Solana agent already holds. Stvor adapts.
+  const agentKey = await generateKeyPair('EdDSA')
+  check('agent key is Ed25519 (OKP)', agentKey.publicJwk.kty === 'OKP')
   const payment = { to: 'vendor_api_credits', amount: '5000.00', currency: 'USD' }
 
-  // 1. Happy path: agent-committed → ALLOW → settle → offline verify.
-  console.log('\n▶ legitimate payment')
+  // 1. Happy path: agent-committed → ALLOW → settle → offline verify BOTH sigs.
+  console.log('\n▶ legitimate payment (Ed25519 agent)')
   const c1 = await stvor.commit(payment, {
     agentId,
     agentPrivateJwk: agentKey.privateJwk,
@@ -44,8 +46,11 @@ async function main() {
   const v1 = await stvor.verify(intent, { commitmentId: c1.commitmentId, agentId })
   check('verify → ALLOW', v1.decision === 'ALLOW', v1.reason)
   check('binding → agent-committed', v1.binding === 'agent-committed')
+  check('receipt embeds Ed25519 agent key', v1.receipt?.agentPubkey?.kty === 'OKP' && v1.receipt?.agentSigAlg === 'EdDSA')
   const settled = await stvor.settle(v1.id!, '0xdeadbeef')
-  check('settlement receipt verifies offline', await stvor.verifyReceipt(settled, { keys: keyset }))
+  const sd = await stvor.verifyReceiptDetailed(settled, { keys: keyset })
+  check('settlement receipt: issuer sig valid', sd.issuerSignature === 'valid')
+  check('settlement receipt: agent (Ed25519) sig valid — offline, from receipt alone', sd.agentSignature === 'valid')
 
   // 2. Destination-swap → DENY + signed DENY receipt verifiable offline.
   console.log('\n▶ destination-swap attack')
@@ -59,7 +64,8 @@ async function main() {
   check('verify → DENY', v2.decision === 'DENY', v2.reason)
   check('reason → PAYLOAD_MISMATCH', v2.reason === 'PAYLOAD_MISMATCH')
   check('DENY receipt names the attempted destination', v2.receipt?.to === '0xattacker_swapped_this')
-  check('DENY receipt verifies offline', !!v2.receipt && (await stvor.verifyReceipt(v2.receipt, { keys: keyset })))
+  const dd = await stvor.verifyReceiptDetailed(v2.receipt!, { keys: keyset })
+  check('DENY receipt: both signatures valid (agent sig over the ORIGINAL commitment)', dd.ok && dd.agentSignature === 'valid')
 
   console.log('')
   if (failures === 0) console.log('ALL CHECKS PASSED ✅\n')

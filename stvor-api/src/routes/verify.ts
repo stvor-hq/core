@@ -7,6 +7,8 @@ import {
   hashPaymentPayload,
   paymentPayloadOf,
   signReceipt,
+  algForJwk,
+  commitmentSigningPayload,
   type Binding,
   type Decision,
   type ReceiptPayload,
@@ -42,8 +44,6 @@ interface Outcome {
   decision: Decision
   reason: string
   binding: Binding
-  agentKeyThumbprint?: string
-  agentSignature?: string
 }
 
 /** Constant-time equality of two SHA-256 hex digests. */
@@ -72,29 +72,28 @@ async function decide(
 
   if (commitment) {
     const binding: Binding = commitment.agentSignature ? 'agent-committed' : 'committed'
-    const carry = { agentKeyThumbprint: commitment.agentKeyThumbprint, agentSignature: commitment.agentSignature }
 
     if (commitment.agentId !== agentId) {
-      return { decision: 'DENY', reason: 'AGENT_MISMATCH', binding, ...carry }
+      return { decision: 'DENY', reason: 'AGENT_MISMATCH', binding }
     }
     if (new Date() > new Date(commitment.expiresAt)) {
-      return { decision: 'DENY', reason: 'COMMITMENT_EXPIRED', binding, ...carry }
+      return { decision: 'DENY', reason: 'COMMITMENT_EXPIRED', binding }
     }
     if (commitment.consumed) {
-      return { decision: 'DENY', reason: 'COMMITMENT_CONSUMED', binding, ...carry }
+      return { decision: 'DENY', reason: 'COMMITMENT_CONSUMED', binding }
     }
 
     const liveHash = await hashPaymentPayload(paymentPayloadOf(intent))
     if (!hashEq(liveHash, commitment.payloadHash)) {
-      return { decision: 'DENY', reason: 'PAYLOAD_MISMATCH', binding, ...carry }
+      return { decision: 'DENY', reason: 'PAYLOAD_MISMATCH', binding }
     }
 
     // Payload matches — claim the single-use commitment atomically. Losing this
     // race (someone already consumed it) is a replay, so it must DENY.
     if (!store.consumeCommitment(commitment.commitmentId)) {
-      return { decision: 'DENY', reason: 'COMMITMENT_CONSUMED', binding, ...carry }
+      return { decision: 'DENY', reason: 'COMMITMENT_CONSUMED', binding }
     }
-    return { decision: 'ALLOW', reason: 'PAYLOAD_MATCH', binding, ...carry }
+    return { decision: 'ALLOW', reason: 'PAYLOAD_MATCH', binding }
   }
 
   // No commitment: attested. Structural guards + optional (stub) trust gate.
@@ -143,6 +142,25 @@ export async function verifyRoutes(app: FastifyInstance) {
     const receiptId = `rec_${nanoid(12)}`
     const nonce = commitment?.nonce ?? parsed.data.nonce ?? nanoid(16)
 
+    // Agent-committed proof: embed the agent's FULL public key, the exact
+    // envelope it signed, and its algorithm — so the receipt verifies on its
+    // own. Carried for DENY too (a swap receipt proves what the agent committed
+    // to vs. what was attempted).
+    const agentProof: Partial<ReceiptPayload> = {}
+    if (commitment?.agentSignature && commitment.agentPubkey) {
+      agentProof.agentPubkey = commitment.agentPubkey
+      agentProof.agentSigAlg = algForJwk(commitment.agentPubkey)
+      agentProof.agentCommitment = commitmentSigningPayload({
+        agentId: commitment.agentId,
+        alg: commitment.alg,
+        expiresAt: commitment.expiresAt,
+        nonce: commitment.nonce,
+        payloadHash: commitment.payloadHash,
+      })
+      agentProof.agentKeyThumbprint = commitment.agentKeyThumbprint
+      agentProof.agentSignature = commitment.agentSignature
+    }
+
     const payloadFields = paymentPayloadOf(intent)
     const receiptPayload: ReceiptPayload = {
       receiptId,
@@ -161,8 +179,7 @@ export async function verifyRoutes(app: FastifyInstance) {
       expiresAt,
       kid: issuer.kid,
       commitmentId: commitment ? commitment.commitmentId : undefined,
-      agentKeyThumbprint: outcome.agentKeyThumbprint,
-      agentSignature: outcome.agentSignature,
+      ...agentProof,
     }
     const receipt = await signReceipt(receiptPayload, issuer.privateJwk)
 

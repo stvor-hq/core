@@ -1,0 +1,22 @@
+[
+  {
+    "kty": "EC",
+    "jwk": {
+      "kty": "EC",
+      "crv": "P-256",
+      "x": "gag-xR341GmQaE03537RFXn-h6G2qn8JxNbY40kZYsA",
+      "y": "iTKytk16gA-y6EWFnqt99924kfmHMWPJKR4bMDyzEC8"
+    },
+    "thumbprint": "4Cogca7EFBUMJSPMIifsJtB2T9tUDAbcnEbXrwQ3-l4"
+  },
+  {
+    "kty": "OKP",
+    "jwk": {
+      "kty": "OKP",
+      "crv": "Ed25519",
+      "x": "OcgElMfE6xVlCytNFwGJfW-9WVZ35gmzkCMfbvgqlyQ",
+      "kid": "key_At3hOe1O8q9ZZpN1"
+    },
+    "thumbprint": "At3hOe1O8q9ZZpN1GIhOPdu8GJwZYNmgiKV65J5bvKQ"
+  }
+]

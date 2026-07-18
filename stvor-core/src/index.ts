@@ -11,13 +11,17 @@ export {
   kidOf,
   resolveKey,
   type EcJwk,
+  type OkpJwk,
+  type AgentJwk,
   type KeyRegistry,
   type KeyRegistryEntry,
 } from './keys.js'
 export {
   signCanonical,
   verifyCanonical,
+  algForJwk,
   generateKeyPair,
+  type SigAlg,
   type GeneratedKeyPair,
 } from './signing.js'
 export {

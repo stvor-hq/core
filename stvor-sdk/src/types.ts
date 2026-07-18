@@ -1,6 +1,26 @@
-import type { EcJwk, KeyRegistry, TrustReceipt, Binding, Decision } from '@stvor/core'
+import type {
+  EcJwk,
+  OkpJwk,
+  AgentJwk,
+  KeyRegistry,
+  TrustReceipt,
+  Binding,
+  Decision,
+  SigAlg,
+  ReceiptVerifyResult,
+} from '@stvor/core'
 
-export type { EcJwk, KeyRegistry, TrustReceipt, Binding, Decision }
+export type {
+  EcJwk,
+  OkpJwk,
+  AgentJwk,
+  KeyRegistry,
+  TrustReceipt,
+  Binding,
+  Decision,
+  SigAlg,
+  ReceiptVerifyResult,
+}
 
 /** allow | deny → a degraded decision on Stvor transport failure; throw → surface the error. */
 export type FailMode = 'allow' | 'deny' | 'throw'
@@ -50,9 +70,10 @@ export interface CommitOptions {
   agentId?: string // defaults to payment-derived agent; usually the payer
   nonce?: string
   expiresAt?: string // ISO; default now + 5 min
-  /** Provide to produce an agent-committed binding: Stvor verifies this signature. */
-  agentPrivateJwk?: EcJwk
-  agentPubkey?: EcJwk
+  /** Provide to produce an agent-committed binding: Stvor verifies this signature.
+   *  Ed25519 (OKP) or P-256 (EC) — whatever the agent already holds. */
+  agentPrivateJwk?: AgentJwk
+  agentPubkey?: AgentJwk
 }
 
 export interface CommitResult {

@@ -5,8 +5,10 @@ import {
   commitmentSigningPayload,
   verifyReceiptOffline,
   type EcJwk,
+  type AgentJwk,
   type KeyRegistry,
   type TrustReceipt,
+  type ReceiptVerifyResult,
 } from '@stvor/core'
 import {
   StvorError,
@@ -177,14 +179,28 @@ export class Stvor {
     receipt: TrustReceipt,
     opts?: { jwk?: EcJwk; keys?: KeyRegistry }
   ): Promise<boolean> {
+    return (await this.verifyReceiptDetailed(receipt, opts)).ok
+  }
+
+  /**
+   * Full structured verification result: which signatures checked out. For an
+   * `agent-committed` receipt this reports BOTH the issuer and the embedded
+   * agent signature — the complete proof, offline, from the receipt + key alone.
+   */
+  async verifyReceiptDetailed(
+    receipt: TrustReceipt,
+    opts?: { jwk?: EcJwk; keys?: KeyRegistry }
+  ): Promise<ReceiptVerifyResult> {
     const keys = opts?.jwk ?? opts?.keys ?? (await this.keyset())
-    const res = await verifyReceiptOffline(receipt, keys)
-    return res.ok
+    return verifyReceiptOffline(receipt, keys)
   }
 }
 
-function publicPart(jwk: EcJwk): EcJwk {
-  return { kty: 'EC', crv: 'P-256', x: jwk.x, y: jwk.y }
+/** Public members only — Ed25519 (OKP) or P-256 (EC). */
+function publicPart(jwk: AgentJwk): AgentJwk {
+  return jwk.kty === 'OKP'
+    ? { kty: 'OKP', crv: 'Ed25519', x: jwk.x }
+    : { kty: 'EC', crv: 'P-256', x: jwk.x, y: jwk.y }
 }
 
 export { generateKeyPair }

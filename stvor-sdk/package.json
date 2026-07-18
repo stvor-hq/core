@@ -1,6 +1,6 @@
 {
   "name": "@stvor/client",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "TypeScript client for the Stvor verification API: commit → verify → settle, with offline receipt verification and configurable fail mode. Stvor never touches funds.",
   "keywords": ["stvor", "trust", "verification", "ai-agents", "payments", "notary"],
   "license": "MIT",

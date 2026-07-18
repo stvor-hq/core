@@ -5,19 +5,19 @@ import {
   verifyCanonical,
   commitmentSigningPayload,
   jwkThumbprint,
-  type EcJwk,
+  algForJwk,
+  type AgentJwk,
 } from '@stvor/core'
 import { store } from '../store.js'
 import { requireApiKey } from '../auth.js'
 import type { Commitment } from '../types.js'
 
+const SUPPORTED = ['EC/P-256 (ES256)', 'OKP/Ed25519 (EdDSA)']
+
+// Loose JWK — the agent key is whatever the agent already holds. We do NOT
+// reject unknown types here; algForJwk gives the specific UNSUPPORTED_AGENT_KEY.
 const JwkSchema = z
-  .object({
-    kty: z.literal('EC'),
-    crv: z.literal('P-256'),
-    x: z.string().min(1),
-    y: z.string().min(1),
-  })
+  .object({ kty: z.string().min(1), crv: z.string().min(1), x: z.string().min(1) })
   .passthrough()
 
 const CommitmentBodySchema = z
@@ -36,10 +36,11 @@ const CommitmentBodySchema = z
   })
 
 /**
- * A commitment freezes the payment invariants (via payloadHash) at intent time,
- * BEFORE execution. When it carries the agent's own signature, the resulting
- * receipt proves — to any third party, without trusting Stvor or the integrator
- * — that the executed payment matched what the agent itself committed to.
+ * Freezes the payment invariants (via payloadHash) BEFORE execution. When it
+ * carries the agent's own signature, the receipt proves — to any third party,
+ * from the receipt + Stvor's key alone — that the executed payment matched what
+ * the agent itself committed to. The agent key type is whatever the agent has
+ * (Ed25519 on Solana, P-256 elsewhere); Stvor adapts, never demands its own.
  */
 export async function commitmentRoutes(app: FastifyInstance) {
   app.post('/commitments', { preHandler: requireApiKey }, async (req, reply) => {
@@ -47,27 +48,35 @@ export async function commitmentRoutes(app: FastifyInstance) {
     if (!parsed.success) {
       return reply.code(400).send({ error: 'Invalid request', details: parsed.error.flatten() })
     }
-    const { agentId, payloadHash, alg, nonce, expiresAt, agentSignature, agentPubkey } = parsed.data
+    const { agentId, payloadHash, alg, nonce, expiresAt, agentSignature } = parsed.data
+    const agentPubkey = parsed.data.agentPubkey as AgentJwk | undefined
 
     if (new Date(expiresAt) <= new Date()) {
       return reply.code(400).send({ error: 'expiresAt must be in the future' })
     }
 
     let agentKeyThumbprint: string | undefined
-    if (agentSignature) {
+    if (agentSignature && agentPubkey) {
+      // Reject unsupported key types explicitly — distinct from a bad signature.
+      try {
+        algForJwk(agentPubkey)
+      } catch {
+        return reply.code(400).send({ error: 'UNSUPPORTED_AGENT_KEY', supported: SUPPORTED })
+      }
+
       const signingPayload = commitmentSigningPayload({ agentId, alg, expiresAt, nonce, payloadHash })
       let valid = false
       try {
-        valid = await verifyCanonical(signingPayload, agentSignature, agentPubkey as EcJwk)
+        // Dispatches on the DECLARED kty/crv only — never probes the bytes.
+        valid = await verifyCanonical(signingPayload, agentSignature, agentPubkey)
       } catch {
         valid = false
       }
-      // Invalid agent signature is a hard reject — never a silent downgrade to
-      // a weaker binding. The caller asked for agent-committed; give it or fail.
+      // Invalid agent signature is a hard reject — never a silent downgrade.
       if (!valid) {
         return reply.code(400).send({ error: 'INVALID_AGENT_SIGNATURE' })
       }
-      agentKeyThumbprint = await jwkThumbprint(agentPubkey as EcJwk)
+      agentKeyThumbprint = await jwkThumbprint(agentPubkey)
     }
 
     const commitment: Commitment = {
@@ -77,7 +86,7 @@ export async function commitmentRoutes(app: FastifyInstance) {
       alg,
       nonce,
       agentSignature,
-      agentPubkey: agentSignature ? (agentPubkey as EcJwk) : undefined,
+      agentPubkey: agentSignature ? publicOnly(agentPubkey!) : undefined,
       agentKeyThumbprint,
       createdAt: new Date().toISOString(),
       expiresAt,
@@ -95,4 +104,11 @@ export async function commitmentRoutes(app: FastifyInstance) {
 
     return reply.code(201).send({ commitmentId: commitment.commitmentId, expiresAt })
   })
+}
+
+/** Strip any private member before storing/embedding the agent key. */
+function publicOnly(jwk: AgentJwk): AgentJwk {
+  return jwk.kty === 'OKP'
+    ? { kty: 'OKP', crv: 'Ed25519', x: jwk.x }
+    : { kty: 'EC', crv: 'P-256', x: jwk.x, y: jwk.y }
 }

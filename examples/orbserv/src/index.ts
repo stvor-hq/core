@@ -72,7 +72,9 @@ async function settle(payment: Intent, opts?: { swapTo?: string }): Promise<Trus
 
 async function main() {
   console.log('\n═══ Orbserv × Stvor reference integration ═══\n')
-  agentKey = await generateKeyPair()
+  // The agent's own key. Ed25519 here (what a Solana agent already holds) —
+  // Stvor adapts to the key type; the agent never mints one just for Stvor.
+  agentKey = await generateKeyPair('EdDSA')
   keyset = await stvor.keyset() // fetched once; every receipt below verifies offline against it
 
   console.log('▶ Case 1: legitimate payment (commit → verify → settle)')

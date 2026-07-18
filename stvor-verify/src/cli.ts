@@ -80,15 +80,25 @@ async function main() {
   }
 
   const res = await verifyReceiptOffline(receipt, keys!)
-  if (!res.ok) fail(res.reason, res.detail, args.json)
+  if (!res.ok) fail(res.reason ?? 'INVALID', res.detail ?? '', args.json)
 
-  const r = res.receipt
+  const r = res.receipt!
   if (args.json) {
-    process.stdout.write(JSON.stringify({ ok: true, receipt: r }) + '\n')
+    process.stdout.write(
+      JSON.stringify({
+        ok: true,
+        binding: res.binding,
+        issuerSignature: res.issuerSignature,
+        agentSignature: res.agentSignature,
+        receipt: r,
+      }) + '\n'
+    )
   } else {
     const amt = r.amount ? ` ${r.amount}${r.currency ? ' ' + r.currency : ''}` : ''
+    const agent = res.agentSignature === 'not_applicable' ? '' : ` agentSig=${res.agentSignature}`
     process.stdout.write(
-      `OK  decision=${r.decision} binding=${r.binding} to=${r.to}${amt} kid=${r.kid}\n`
+      `OK  binding=${r.binding} issuerSig=${res.issuerSignature}${agent}\n` +
+        `    decision=${r.decision} to=${r.to}${amt} kid=${r.kid}\n`
     )
   }
   process.exit(0)

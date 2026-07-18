@@ -59,7 +59,11 @@ Do not hand-roll it — use a JCS library and check it against
 - **`agent-committed`** — the commitment carried a signature from the agent’s
   own key, verified by Stvor. Proves the executed payment matched what *the
   agent itself* committed to, verifiable by a third party **without trusting the
-  integrator or Stvor**.
+  integrator or Stvor**. The agent’s **full public key** and the exact envelope
+  it signed are embedded in the receipt, so `receipt + Stvor’s published key` is
+  a complete proof — no other input, no network. The agent key is **whatever the
+  agent already holds** (Ed25519 on Solana, P-256 elsewhere); Stvor adapts.
+  What this does **not** prove: see §9.
 
 ## 4. Endpoints
 
@@ -76,16 +80,47 @@ get `agent-committed`.
   "alg": "sha256",
   "nonce": "unique-per-agent",
   "expiresAt": "2026-07-16T12:00:00.000Z",
-  "agentSignature": "<base64url r‖s>",   // optional
-  "agentPubkey": { "kty":"EC","crv":"P-256","x":"…","y":"…" } // required iff agentSignature present
+  "agentSignature": "<base64url, 64 bytes>",   // optional
+  // required iff agentSignature present — the agent's OWN key type:
+  "agentPubkey": { "kty":"OKP", "crv":"Ed25519", "x":"…" }
+  //          or  { "kty":"EC",  "crv":"P-256",  "x":"…", "y":"…" }
 }
 // 201
 { "commitmentId": "cmt_…", "expiresAt": "2026-07-16T12:00:00.000Z" }
 ```
 
-- `agentSignature`, when present, is ES256 over `JCS({agentId, alg, expiresAt, nonce, payloadHash})`.
-  An **invalid** signature is rejected with `400 INVALID_AGENT_SIGNATURE` — never
-  silently downgraded to a weaker binding.
+**Agent key algorithms** (dispatched on the declared `kty`/`crv`, never guessed
+from the signature bytes — Ed25519 and ES256 signatures are both 64 bytes):
+
+| `kty` | `crv` | signature alg |
+|---|---|---|
+| `OKP` | `Ed25519` | `EdDSA` |
+| `EC` | `P-256` | `ES256` (raw IEEE-P1363 r‖s) |
+
+Anything else → `400 UNSUPPORTED_AGENT_KEY`. An **invalid** signature (including
+a cross-algorithm attempt) → `400 INVALID_AGENT_SIGNATURE`. Never a silent
+downgrade to a weaker binding.
+
+**What the agent signs — get this exactly right.** The agent signs the RFC 8785
+canonical bytes of the **envelope**, not the bare `payloadHash`:
+
+```
+signed bytes = JCS({
+  "agentId":     "orb1agent001xyz",
+  "alg":         "sha256",
+  "expiresAt":   "2026-07-16T12:00:00.000Z",
+  "nonce":       "unique-per-agent",
+  "payloadHash": "9f2c…"      // SHA-256 of JCS(payment payload), lowercase hex
+})
+= {"agentId":"orb1agent001xyz","alg":"sha256","expiresAt":"2026-07-16T12:00:00.000Z","nonce":"unique-per-agent","payloadHash":"9f2c…"}
+```
+
+Signing the bare `payloadHash` alone is **wrong**: it leaves `nonce` and
+`expiresAt` unbound, so the same signature replays against a different
+commitment window. Canonicalization is **RFC 8785** (not sorted-key JSON) — check
+your output against [`fixtures/canonical-vectors.json`](fixtures/); `amount` is a
+decimal string.
+
 - `(agentId, nonce)` is unique. A duplicate returns `409`.
 
 ### `POST /verify`
@@ -186,24 +221,40 @@ is signed** — there is no partially-covered field.
   "issuedAt": "…", "expiresAt": "…",
   "kid": "key_…",
   "commitmentId": "cmt_…?",
-  "agentKeyThumbprint": "…?",   // RFC 7638, when agent-committed
-  "agentSignature": "…?",       // the agent's own signature, carried through
+  // --- agent-committed proof (all inside the issuer signature) ---
+  "agentPubkey": { "kty":"OKP","crv":"Ed25519","x":"…" },  // the agent's FULL public key
+  "agentSigAlg": "EdDSA",                                    // or "ES256"
+  "agentCommitment": {                                       // the exact envelope the agent signed
+    "agentId":"…","alg":"sha256","expiresAt":"…","nonce":"…","payloadHash":"…"
+  },
+  "agentKeyThumbprint": "…?",   // RFC 7638 (convenience)
+  "agentSignature": "…?",       // the agent's signature over JCS(agentCommitment)
   "txHash": "0x…?",             // settlement receipt only
   "verificationReceiptId": "rec_…?", // settlement receipt only
-  "signature": "<base64url r‖s, 64 bytes>"
+  "signature": "<base64url, 64 bytes>"
 }
 ```
+
+`agentPubkey` is embedded because a thumbprint is a **hash** of the key, and you
+cannot verify a signature against a hash. With the full key in the receipt,
+`receipt + Stvor's published key` is a complete proof — nothing else, no network.
 
 **Verification procedure (offline, zero network):**
 
 1. Take the receipt, remove `signature`.
 2. Resolve the key for `receipt.kid` from the keyset. Unknown kid → **FAIL
    (`UNKNOWN_KEY`)** — never fall back to another key.
-3. Check the ES256 signature over `JCS(payload)` (P-256 / SHA-256 / raw
-   IEEE-P1363 r‖s). Mismatch → **FAIL (`BAD_SIGNATURE`)**.
+3. Check the **issuer** signature over `JCS(payload)` — ES256 / P-256 / raw
+   IEEE-P1363. Mismatch → **FAIL (`BAD_ISSUER_SIGNATURE`)**.
+4. If `binding == "agent-committed"`: check the **agent** signature over
+   `JCS(agentCommitment)` using the embedded `agentPubkey`, dispatched on its
+   `kty`/`crv` (never guessed). Mismatch → **FAIL (`BAD_AGENT_SIGNATURE`)**.
 
-Signature scheme is **ES256 / P-256 / IEEE-P1363**, frozen. Any standard JOSE /
-WebCrypto verifier accepts it from the published JWK.
+Result is structured: `{ ok, binding, issuerSignature, agentSignature }`.
+
+The **issuer** signature scheme is **ES256 / P-256 / IEEE-P1363**, frozen — any
+standard JOSE / WebCrypto verifier accepts it. **Agent** signatures are `EdDSA`
+(Ed25519) or `ES256` (P-256) per the embedded key.
 
 Reference tooling (all run the same `@stvor/core` code):
 
@@ -242,6 +293,17 @@ binding above — nothing is claimed that the code does not do.
 ## 8. Test vectors
 
 [`fixtures/`](fixtures/) is published so you can self-check **before** going
-live: `canonical-vectors.json` (your serializer must match byte-for-byte) and
-`receipt-vectors.json` (valid + tampered, verify offline against `keyset.json`).
-Regenerate with `bun run vectors`.
+live: `canonical-vectors.json` (your serializer must match byte-for-byte),
+`receipt-vectors.json` (valid + tampered, P-256 **and Ed25519** agent-committed,
+plus the cross-algorithm confusion case — verify offline against `keyset.json`),
+and `thumbprint-vectors.json` (RFC 7638 for EC and OKP). Regenerate with
+`bun run vectors`.
+
+## 9. What `agent-committed` does *not* prove
+
+`agent-committed` proves that **the holder of key K** committed to this payload
+and that the executed payment matched it. It does **not** prove that key K
+belongs to any particular company, person, or agent identity. Binding a key to a
+real-world identity is a separate layer (ACK-ID, ERC-8004) and is **outside
+Stvor’s scope**. Stvor is the notary of *what was committed and executed*, not
+the registrar of *who owns the key*.

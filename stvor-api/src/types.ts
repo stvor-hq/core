@@ -1,4 +1,4 @@
-import type { Binding, Decision, TrustReceipt, EcJwk } from '@stvor/core'
+import type { Binding, Decision, TrustReceipt, AgentJwk } from '@stvor/core'
 
 export type { Binding, Decision, TrustReceipt }
 
@@ -58,7 +58,8 @@ export interface Commitment {
   nonce: string
   /** Present only when the agent signed the commitment (binding: agent-committed). */
   agentSignature?: string
-  agentPubkey?: EcJwk
+  /** The agent's own key — Ed25519 (OKP) or P-256 (EC), whatever it holds. */
+  agentPubkey?: AgentJwk
   agentKeyThumbprint?: string
   createdAt: string
   expiresAt: string
