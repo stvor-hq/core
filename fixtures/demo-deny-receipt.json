@@ -12,50 +12,50 @@
     "currency": "USDC"
   },
   "receipt": {
-    "receiptId": "rec_41gdRVEv7_Yo",
-    "verificationId": "ver_Er0vLYoRYqJ3",
+    "receiptId": "rec_ZF72FnyhO5Be",
+    "verificationId": "ver_h-NXd4nYhnbd",
     "binding": "agent-committed",
     "agentId": "agent_demo_blocked",
     "to": "0x8f3a2c91d4e7b0a6c5d8f1e2a4b7c9d0e3f6a8c1d",
     "amount": "50000.00",
     "currency": "USDC",
-    "nonce": "2495b58d-c26e-4350-91ae-0e4cc063200f",
+    "nonce": "c4a08c98-4eae-4687-984d-38afbc7d7154",
     "decision": "DENY",
     "reason": "PAYLOAD_MISMATCH",
-    "issuedAt": "2026-07-21T08:53:58.628Z",
-    "expiresAt": "2026-07-21T08:58:58.628Z",
-    "kid": "key_xd4o8VukjEgAyNPg",
-    "commitmentId": "cmt_bMzkiyUUuR-x",
+    "issuedAt": "2026-07-21T08:57:27.053Z",
+    "expiresAt": "2026-07-21T09:02:27.053Z",
+    "kid": "key_IGIB0w9zm0lH3UFm",
+    "commitmentId": "cmt_2xUjdzWx7Q_z",
     "agentPubkey": {
       "kty": "OKP",
       "crv": "Ed25519",
-      "x": "GeYNHDiXhrDtFQM9TwT80Vg6nMI3ysY3MzkLoQ57uIE"
+      "x": "tFlo3e7LzWfRykbiiOCxw22VCvEzxATfqw-7PB0HQBI"
     },
     "agentSigAlg": "EdDSA",
     "agentCommitment": {
       "agentId": "agent_demo_blocked",
       "alg": "sha256",
-      "expiresAt": "2026-07-21T08:58:58.565Z",
-      "nonce": "2495b58d-c26e-4350-91ae-0e4cc063200f",
+      "expiresAt": "2026-07-21T09:02:26.133Z",
+      "nonce": "c4a08c98-4eae-4687-984d-38afbc7d7154",
       "payloadHash": "b36c8892571afafab33f0f389c62293948a7ff61f3064eca12700582756cda78"
     },
-    "agentKeyThumbprint": "aws_Hb3-PIGbIZ0YcebgJY2wGBG9JVDDGVS7hcKBXrs",
-    "agentSignature": "3IFcgGv1-GMvvju3nmAtR336eewQxqfl0Gy8GVz961LuzfIpQIxXHOcsCeWaDQCjuGdwymHCjnb_N6-tpx2vCQ",
-    "signature": "rQ3nsY5ghE3QT7acZGfWTmZJkoKkNgnE30CH-d2Ie22dAmBGW_mf49e7o1NOsn0EayW63fzbe_ZJhvdsfzXiuA"
+    "agentKeyThumbprint": "hcxXgHAOcZOiS5a94q5Y61aTG4OV2qZLeiG_aMvXg7w",
+    "agentSignature": "6joqvrUk4zPho2g48-fNi64nWIIAJcqIPOf7a6eTQo7MFoEJA15t7pex0leiamcA4owv8TsiCFznEtxMD_UVBQ",
+    "signature": "RWKoSYNYV9xtW0nnRobegGi-PYOyMW6zN0CdiuWKuRzQNHjuXDPGNyL31EjJx1LZJMuaAKeAWP34_D4SwuQ-QQ"
   },
   "binding": "agent-committed",
   "keyset": {
     "keys": [
       {
-        "kid": "key_xd4o8VukjEgAyNPg",
+        "kid": "key_IGIB0w9zm0lH3UFm",
         "jwk": {
           "kty": "EC",
           "crv": "P-256",
-          "x": "OkoIyza5qjlzQr241H1SleRWbmMzyd5XfI1nQiC2ObE",
-          "y": "JgOUmASMh81CebBvENrr_Jwosuax-75k0doSpFwPB_g",
-          "kid": "key_xd4o8VukjEgAyNPg"
+          "x": "emvroyizLnL-aWLJwlDH08pxJyDa2URnWuOccMgrUp8",
+          "y": "lSDld2JVo-BddQRpQsG4PnBImuAb-bymfaurHmjq7QU",
+          "kid": "key_IGIB0w9zm0lH3UFm"
         },
-        "notBefore": "2026-07-21T08:51:08.443Z"
+        "notBefore": "2026-07-16T05:55:35.536Z"
       }
     ]
   },
