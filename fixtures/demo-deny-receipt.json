@@ -1,0 +1,63 @@
+{
+  "name": "demo-deny-blocked-attack",
+  "description": "Agent committed USDC 50000.00 to vendor 0x4c1b82f7…; execution attempted swapped destination. DENY + offline-verifiable receipt.",
+  "committed": {
+    "to": "0x4c1b82f71a9e3d0c8b5e6f2a1d4c7b9e0f3a8c1d",
+    "amount": "50000.00",
+    "currency": "USDC"
+  },
+  "attempted": {
+    "to": "0x8f3a2c91d4e7b0a6c5d8f1e2a4b7c9d0e3f6a8c1d",
+    "amount": "50000.00",
+    "currency": "USDC"
+  },
+  "receipt": {
+    "receiptId": "rec_41gdRVEv7_Yo",
+    "verificationId": "ver_Er0vLYoRYqJ3",
+    "binding": "agent-committed",
+    "agentId": "agent_demo_blocked",
+    "to": "0x8f3a2c91d4e7b0a6c5d8f1e2a4b7c9d0e3f6a8c1d",
+    "amount": "50000.00",
+    "currency": "USDC",
+    "nonce": "2495b58d-c26e-4350-91ae-0e4cc063200f",
+    "decision": "DENY",
+    "reason": "PAYLOAD_MISMATCH",
+    "issuedAt": "2026-07-21T08:53:58.628Z",
+    "expiresAt": "2026-07-21T08:58:58.628Z",
+    "kid": "key_xd4o8VukjEgAyNPg",
+    "commitmentId": "cmt_bMzkiyUUuR-x",
+    "agentPubkey": {
+      "kty": "OKP",
+      "crv": "Ed25519",
+      "x": "GeYNHDiXhrDtFQM9TwT80Vg6nMI3ysY3MzkLoQ57uIE"
+    },
+    "agentSigAlg": "EdDSA",
+    "agentCommitment": {
+      "agentId": "agent_demo_blocked",
+      "alg": "sha256",
+      "expiresAt": "2026-07-21T08:58:58.565Z",
+      "nonce": "2495b58d-c26e-4350-91ae-0e4cc063200f",
+      "payloadHash": "b36c8892571afafab33f0f389c62293948a7ff61f3064eca12700582756cda78"
+    },
+    "agentKeyThumbprint": "aws_Hb3-PIGbIZ0YcebgJY2wGBG9JVDDGVS7hcKBXrs",
+    "agentSignature": "3IFcgGv1-GMvvju3nmAtR336eewQxqfl0Gy8GVz961LuzfIpQIxXHOcsCeWaDQCjuGdwymHCjnb_N6-tpx2vCQ",
+    "signature": "rQ3nsY5ghE3QT7acZGfWTmZJkoKkNgnE30CH-d2Ie22dAmBGW_mf49e7o1NOsn0EayW63fzbe_ZJhvdsfzXiuA"
+  },
+  "binding": "agent-committed",
+  "keyset": {
+    "keys": [
+      {
+        "kid": "key_xd4o8VukjEgAyNPg",
+        "jwk": {
+          "kty": "EC",
+          "crv": "P-256",
+          "x": "OkoIyza5qjlzQr241H1SleRWbmMzyd5XfI1nQiC2ObE",
+          "y": "JgOUmASMh81CebBvENrr_Jwosuax-75k0doSpFwPB_g",
+          "kid": "key_xd4o8VukjEgAyNPg"
+        },
+        "notBefore": "2026-07-21T08:51:08.443Z"
+      }
+    ]
+  },
+  "expected": "OK"
+}
